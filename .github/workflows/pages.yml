@@ -1,0 +1,43 @@
+name: Receive public blog snapshot
+
+on:
+  push:
+    branches: [main]
+    paths: [trigger.json]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lucid-space-pages
+  cancel-in-progress: false
+
+jobs:
+  receive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Wait for the requested Cloudflare public snapshot
+        run: python3 receive.py
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: public
+          retention-days: 1
+  deploy:
+    needs: receive
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy mirror
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
