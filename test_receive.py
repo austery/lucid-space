@@ -8,9 +8,9 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from receive import receive, unpack
+from receive import ORIGIN, download, receive, unpack
 
 BUILD = "11111111-1111-1111-1111-111111111111"
 
@@ -34,6 +34,18 @@ class ReceiveTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.destination = Path(self.temp.name) / "public"
+
+    def test_download_identifies_client_and_limits_response(self) -> None:
+        response = Mock(url=ORIGIN + "lucid-pages.json")
+        response.read.return_value = b"{}"
+        context = Mock()
+        context.__enter__ = Mock(return_value=response)
+        context.__exit__ = Mock(return_value=False)
+        with patch("receive.urlopen", return_value=context) as open_url:
+            self.assertEqual(download("lucid-pages.json", 8192), b"{}")
+        request = open_url.call_args.args[0]
+        self.assertEqual(request.get_header("User-agent"), "LucidPagesMirror/1.0")
+        response.read.assert_called_once_with(8193)
 
     def test_valid_snapshot_and_no_stale_merge(self) -> None:
         raw = archive()
