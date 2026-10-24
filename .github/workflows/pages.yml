@@ -21,6 +21,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - name: Inspect public origin connectivity
+        run: |
+          curl --silent --show-error --max-time 30 -I https://lucid-blog.lucid-blog.workers.dev/
+          curl --silent --show-error --max-time 30 -I https://lucid-blog.lucid-blog.workers.dev/.well-known/lucid-pages.json
       - name: Wait for the requested Cloudflare public snapshot
         run: python3 receive.py
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3

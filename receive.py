@@ -19,7 +19,7 @@ UUID = re.compile(r"[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
 
 
 def download(name: str, limit: int) -> bytes:
-    request = Request(ORIGIN + name, headers={"Cache-Control": "no-cache"})
+    request = Request(ORIGIN + name, headers={"Cache-Control": "no-cache", "User-Agent": "LucidPagesMirror/1.0"})
     with urlopen(request, timeout=30) as response:
         if response.url != ORIGIN + name:
             raise ValueError("Unexpected mirror download redirect")
